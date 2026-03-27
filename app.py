@@ -12,6 +12,7 @@ from PyPDF2 import PdfReader
 load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = "super-secret-key-any-string-here"
 
 MAX_PDF_CHARS = 12000
 ALLOWED_EXTENSIONS = {"pdf"}
