@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart_Sakha.AI</title>
+    <style>
+        :root {
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --text: #2d3748;
+            --muted: #718096;
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --danger: #dc2626;
+            --border: #e2e8f0;
+            --user-bg: #dbeafe;
+            --assistant-bg: #f0fdf4;
+            --user-border: #93c5fd;
+            --assistant-border: #86efac;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: var(--primary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .clear-btn {
+            background: var(--danger);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s ease;
+        }
+
+        .clear-btn:hover {
+            background: #b91c1c;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--muted);
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .message {
+            display: flex;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.assistant {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .message.user .message-content {
+            background: var(--user-bg);
+            border: 1px solid var(--user-border);
+        }
+
+        .message.assistant .message-content {
+            background: var(--assistant-bg);
+            border: 1px solid var(--assistant-border);
+        }
+
+        .thinking-content {
+            color: #475569;
+            font-style: italic;
+            animation: thinkingPulse 1s ease-in-out infinite;
+        }
+
+        .loading-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #0f172a;
+            font-style: normal;
+        }
+
+        .loading-dots {
+            display: inline-flex;
+            gap: 6px;
+        }
+
+        .loading-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #0d9488;
+            box-shadow: 0 0 8px rgba(13, 148, 136, 0.65);
+            animation: dotPulse 0.9s ease-in-out infinite;
+        }
+
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes dotPulse {
+            0%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.5;
+            }
+            50% {
+                transform: translateY(-3px);
+                opacity: 1;
+            }
+        }
+
+        .fade-reveal {
+            animation: responseFadeIn 0.45s ease both;
+        }
+
+        @keyframes responseFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes thinkingPulse {
+            0% {
+                opacity: 0.45;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0.45;
+            }
+        }
+
+        .input-section {
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            padding: 16px 20px;
+            flex-shrink: 0;
+        }
+
+        .error {
+            color: var(--danger);
+            font-size: 14px;
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            background: #fee2e2;
+            border-radius: 6px;
+            border-left: 3px solid var(--danger);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 8px;
+        }
+
+        textarea#question {
+            flex: 1;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: none;
+            max-height: 120px;
+            min-height: 44px;
+            color: var(--text);
+            line-height: 1.4;
+        }
+
+        textarea#question:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea#question::placeholder {
+            color: var(--muted);
+        }
+
+        .send-btn {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            align-self: flex-end;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .send-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .send-btn:active {
+            transform: translateY(0);
+        }
+
+        .pdf-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+            color: #ffffff;
+            border-radius: 10px;
+            padding: 12px 22px;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            border: 1px solid #0f766e;
+            box-shadow: 0 8px 20px rgba(13, 148, 136, 0.25);
+            transition: all 0.2s ease;
+        }
+
+        .pdf-btn:hover {
+            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+            box-shadow: 0 10px 24px rgba(13, 148, 136, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .pdf-btn:active {
+            transform: translateY(0);
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .creator-footer {
+            flex-shrink: 0;
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+            padding: 10px 12px;
+            background: var(--card);
+            border-top: 1px solid var(--border);
+        }
+
+        .creator-footer a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .creator-footer a:hover {
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Smart_Sakha.AI</h1>
+        <div class="header-actions">
+            <a href="/pdf" class="pdf-btn">Summarize PDF</a>
+            <form action="/clear-chat" method="post" style="margin: 0;">
+                <button class="clear-btn" type="submit">Clear Chat</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+            {% if chat_history and chat_history|length > 0 %}
+                {% for item in chat_history %}
+                    <div class="message {% if item.role == 'user' %}user{% else %}assistant{% endif %}">
+                        <div class="message-content">{{ item.content }}</div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div>
+                        <div style="font-size: 18px; margin-bottom: 8px;">Welcome to Smart_Sakha.AI</div>
+                        <div class="muted">Ask a question to get started</div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="input-section">
+        {% if doubt_error %}
+            <div class="error">{{ doubt_error }}</div>
+        {% endif %}
+
+        <form action="/chat" method="post" id="chatForm">
+            <div class="input-wrapper">
+                <textarea id="question" name="question" placeholder="Ask anything about your studies..." maxlength="4000">{{ question or '' }}</textarea>
+                <button class="send-btn" type="submit">Send</button>
+            </div>
+            <div class="info-text">Press <strong>Enter</strong> to send, <strong>Shift + Enter</strong> for new line</div>
+        </form>
+    </div>
+
+    <footer class="creator-footer">
+        Made with 🧠 by <a href="#" target="_blank">Shikhar goyal</a>
+    </footer>
+
+    <script>
+        window.addEventListener('load', function() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            const questionBox = document.getElementById('question');
+            if (questionBox) {
+                questionBox.focus();
+            }
+
+            const chatForm = document.getElementById('chatForm');
+            if (chatForm) {
+                const sendBtnOnLoad = chatForm.querySelector('.send-btn');
+                if (sendBtnOnLoad) {
+                    sendBtnOnLoad.disabled = false;
+                }
+            }
+
+            const hasNewAnswer = "{{ 'true' if answer else 'false' }}" === 'true';
+            if (hasNewAnswer) {
+                const assistantMessages = chatMessages.querySelectorAll('.message.assistant .message-content');
+                const latestAssistantMessage = assistantMessages[assistantMessages.length - 1];
+
+                if (latestAssistantMessage) {
+                    latestAssistantMessage.classList.add('fade-reveal');
+                    const fullText = latestAssistantMessage.textContent || '';
+                    latestAssistantMessage.textContent = '';
+
+                    let index = 0;
+                    const typingInterval = setInterval(function() {
+                        if (index >= fullText.length) {
+                            clearInterval(typingInterval);
+                            return;
+                        }
+
+                        latestAssistantMessage.textContent += fullText.charAt(index);
+                        index += 1;
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }, 12);
+                }
+            }
+        });
+
+        const textarea = document.getElementById('question');
+        const form = document.getElementById('chatForm');
+        const sendButton = form.querySelector('.send-btn');
+        const chatMessages = document.getElementById('chatMessages');
+        let submitting = false;
+
+        form.addEventListener('submit', function(e) {
+            if (submitting) {
+                return;
+            }
+
+            const message = textarea.value.trim();
+            if (!message) {
+                return;
+            }
+
+            e.preventDefault();
+            submitting = true;
+
+            const emptyState = chatMessages.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+
+            const userWrapper = document.createElement('div');
+            userWrapper.className = 'message user';
+            const userContent = document.createElement('div');
+            userContent.className = 'message-content';
+            userContent.textContent = message;
+            userWrapper.appendChild(userContent);
+            chatMessages.appendChild(userWrapper);
+
+            const thinkingWrapper = document.createElement('div');
+            thinkingWrapper.className = 'message assistant';
+            const thinkingContent = document.createElement('div');
+            thinkingContent.className = 'message-content thinking-content';
+            thinkingContent.innerHTML = '<div class="loading-indicator"><span>Thinking</span><span class="loading-dots"><span></span><span></span><span></span></span></div>';
+            thinkingWrapper.appendChild(thinkingContent);
+            chatMessages.appendChild(thinkingWrapper);
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            sendButton.disabled = true;
+
+            setTimeout(function() {
+                form.submit();
+            }, 1000);
+        });
+
+        textarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                form.requestSubmit();
+            }
+        });
+
+        const observer = new MutationObserver(function() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        observer.observe(document.getElementById('chatMessages'), {
+            childList: true
+        });
+    </script>
+</body>
+</html>

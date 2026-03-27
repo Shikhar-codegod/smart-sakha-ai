@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF Summarizer - Smart_Sakha.AI</title>
+    <style>
+        :root {
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --text: #2d3748;
+            --muted: #718096;
+            --primary: #2563eb;
+            --danger: #dc2626;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .header {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: var(--primary);
+        }
+
+        .back-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: background 0.2s ease;
+        }
+
+        .back-link:hover {
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 32px 20px;
+        }
+
+        .upload-card {
+            background: var(--card);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .upload-card:hover {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.02);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .upload-card h2 {
+            margin: 0 0 8px;
+            color: var(--primary);
+        }
+
+        .upload-card p {
+            margin: 0 0 24px;
+            color: var(--muted);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-input-label {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+
+        .file-input-label:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .file-input-label:active {
+            transform: translateY(0);
+        }
+
+        .selected-file {
+            margin-top: 16px;
+            padding: 12px;
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 6px;
+            color: #15803d;
+            font-size: 14px;
+        }
+
+        .instruction-box {
+            margin-top: 16px;
+            text-align: left;
+        }
+
+        .instruction-box label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .instruction-box textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 84px;
+            line-height: 1.4;
+            color: var(--text);
+        }
+
+        .instruction-box textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .submit-btn {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .submit-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .submit-btn:disabled {
+            background: var(--muted);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .pdf-loading {
+            display: none;
+            margin-top: 16px;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            color: #0f172a;
+            font-weight: 500;
+        }
+
+        .pdf-loading.visible {
+            display: inline-flex;
+        }
+
+        .glow-spinner {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 3px solid rgba(37, 99, 235, 0.2);
+            border-top-color: #2563eb;
+            box-shadow: 0 0 12px rgba(37, 99, 235, 0.45);
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .fade-reveal {
+            animation: responseFadeIn 0.45s ease both;
+        }
+
+        @keyframes responseFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            border-left: 4px solid var(--danger);
+            color: var(--danger);
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .summary-section {
+            margin-top: 32px;
+        }
+
+        .summary-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 16px;
+        }
+
+        .summary-header h2 {
+            margin: 0;
+            color: var(--primary);
+            font-size: 20px;
+        }
+
+        .file-name {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .key-points {
+            margin-bottom: 24px;
+        }
+
+        .key-points h3 {
+            margin: 0 0 12px;
+            color: var(--text);
+            font-size: 16px;
+        }
+
+        .key-points ul {
+            margin: 0;
+            padding-left: 24px;
+            list-style: none;
+        }
+
+        .key-points li {
+            padding: 8px 0;
+            border-left: 3px solid var(--primary);
+            padding-left: 12px;
+            line-height: 1.6;
+            color: var(--text);
+        }
+
+        .explanation {
+            background: #f0f4f8;
+            border-left: 4px solid var(--primary);
+            padding: 16px;
+            border-radius: 6px;
+        }
+
+        .explanation h3 {
+            margin: 0 0 8px;
+            color: var(--primary);
+            font-size: 16px;
+        }
+
+        .explanation p {
+            margin: 0;
+            line-height: 1.6;
+            color: var(--text);
+        }
+
+        .sidebar-info {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            color: #15803d;
+        }
+
+        .sidebar-info strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .upload-card {
+                padding: 20px;
+            }
+
+            .upload-icon {
+                font-size: 36px;
+            }
+
+            .summary-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .file-name {
+                margin-top: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📄 Smart_Sakha.AI PDF Summarizer</h1>
+        <a href="/" class="back-link">← Back to Chat</a>
+    </div>
+
+    <div class="container">
+        {% if pdf_error %}
+            <div class="error">{{ pdf_error }}</div>
+        {% endif %}
+
+        {% if not summary %}
+            <div class="sidebar-info">
+                <strong>ℹ️ How it works:</strong>
+                Upload a PDF file and our AI will extract key points and create a concise summary to help with your studies.
+            </div>
+
+            <form action="/summarize" method="post" enctype="multipart/form-data" id="uploadForm">
+                <div class="upload-card" id="uploadCard">
+                    <div class="upload-icon">📁</div>
+                    <h2>Upload PDF File</h2>
+                    <p>Click to select a PDF or drag and drop</p>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="pdf_file" name="pdf_file" accept="application/pdf" />
+                        <label for="pdf_file" class="file-input-label">Choose File</label>
+                    </div>
+                    <div id="selectedFile"></div>
+
+                    <div class="instruction-box">
+                        <label for="custom_instruction">Custom Instructions (Optional)</label>
+                        <textarea
+                            id="custom_instruction"
+                            name="custom_instruction"
+                            placeholder="Example: Focus on the methodology and summarize in 3 simple sentences."
+                        >{{ custom_instruction or '' }}</textarea>
+                    </div>
+                </div>
+                <div style="text-align: center;">
+                    <button type="submit" class="submit-btn" id="submitBtn" disabled>Summarize PDF</button>
+                    <div class="pdf-loading" id="pdfLoading">
+                        <span class="glow-spinner" aria-hidden="true"></span>
+                        <span>Analyzing your PDF...</span>
+                    </div>
+                </div>
+            </form>
+        {% else %}
+            <div class="summary-section fade-reveal">
+                <div class="summary-card">
+                    <div class="summary-header">
+                        <div>
+                            <h2>Summary</h2>
+                            <div class="file-name">{{ uploaded_name }}</div>
+                        </div>
+                    </div>
+
+                    <div class="key-points">
+                        <h3>🎯 Key Points</h3>
+                        <ul>
+                            {% for point in summary.key_points %}
+                                <li>{{ point }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <div class="explanation">
+                        <h3>📝 Explanation</h3>
+                        <p>{{ summary.short_explanation }}</p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 24px;">
+                    <form action="/summarize" method="post" enctype="multipart/form-data" style="display: inline;">
+                        <label for="pdf_file" class="file-input-label">Summarize Another PDF</label>
+                        <input type="file" id="pdf_file" name="pdf_file" accept="application/pdf" style="display: none;" onchange="document.querySelector('form').submit();" />
+                    </form>
+                    <a href="/" class="back-link" style="margin-left: 12px;">Back to Chat</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('pdf_file');
+        const uploadCard = document.getElementById('uploadCard');
+        const selectedFileDiv = document.getElementById('selectedFile');
+        const submitBtn = document.getElementById('submitBtn');
+        const uploadForm = document.getElementById('uploadForm');
+        const pdfLoading = document.getElementById('pdfLoading');
+
+        // File input change
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    const fileName = this.files[0].name;
+                    const fileSize = (this.files[0].size / 1024).toFixed(2);
+                    selectedFileDiv.innerHTML = `<div class="selected-file">✓ ${fileName} (${fileSize} KB)</div>`;
+                    submitBtn.disabled = false;
+                } else {
+                    selectedFileDiv.innerHTML = '';
+                    submitBtn.disabled = true;
+                }
+            });
+
+            // Drag and drop
+            if (uploadCard) {
+                uploadCard.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadCard.style.borderColor = 'var(--primary)';
+                    uploadCard.style.background = 'rgba(37, 99, 235, 0.02)';
+                });
+
+                uploadCard.addEventListener('dragleave', () => {
+                    uploadCard.style.borderColor = 'var(--border)';
+                    uploadCard.style.background = 'var(--card)';
+                });
+
+                uploadCard.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadCard.style.borderColor = 'var(--border)';
+                    uploadCard.style.background = 'var(--card)';
+                    if (e.dataTransfer.files.length > 0) {
+                        fileInput.files = e.dataTransfer.files;
+                        const event = new Event('change', { bubbles: true });
+                        fileInput.dispatchEvent(event);
+                    }
+                });
+            }
+        }
+
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', function(e) {
+                if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                    e.preventDefault();
+                    return;
+                }
+
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Summarizing...';
+                }
+                if (pdfLoading) {
+                    pdfLoading.classList.add('visible');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
