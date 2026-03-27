@@ -4,6 +4,7 @@ from typing import Dict, List
 
 from dotenv import load_dotenv
 from flask import Flask, render_template, request
+from flask import session
 from openai import OpenAI
 from PyPDF2 import PdfReader
 
@@ -242,7 +243,8 @@ init_db()
 
 @app.route("/", methods=["GET"])
 def index():
-	return render_template("index.html", chat_history=get_chat_history())
+	session.clear()
+	return render_template("index.html", chat_history=[])
 
 
 @app.route("/chat", methods=["POST"])
