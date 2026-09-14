@@ -3,7 +3,7 @@ import sqlite3
 from typing import Dict, List
 
 from dotenv import load_dotenv
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request , send_from_directory
 from flask import session
 from openai import OpenAI
 from PyPDF2 import PdfReader
@@ -12,6 +12,12 @@ from PyPDF2 import PdfReader
 load_dotenv()
 
 app = Flask(__name__)
+@app.route('/googlea9299af665434c02.html')
+def google_verification():
+    return send_from_directory(
+        app.root_path,
+        'googlea9299af665434c02.html'
+    )
 app.secret_key = "super-secret-key-any-string-here"
 
 MAX_PDF_CHARS = 12000
